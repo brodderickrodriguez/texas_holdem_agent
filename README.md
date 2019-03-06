@@ -19,4 +19,12 @@ to set up the environment:
   `pip3 install -r requirements.txt`
 
 
+To run the Agent:
+ 
+  option (1) - run the bash shell script (Linux / MacOS):
+    `bash ./run.sh`
+
+  option (2) - run manually (universal):
+    `python3 ./main.py`
+  
 
