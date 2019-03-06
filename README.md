@@ -9,22 +9,22 @@ to set up the environment:
   - Make sure you have the virtual environment package:
     `pip3 install virtualenv --user`
 
-  	Make a virtual environment:
-  	`python3 -m venv .env`
+  - Make a virtual environment:
+    `python3 -m venv .env`
 
-  	Activate the virtual environment:
-  	`source .env/bin/activate`
+  - Activate the virtual environment:
+    `source .env/bin/activate`
 
-  	Download dependencies:
-  	`pip3 install -r requirements.txt`
+  - Download dependencies:
+    `pip3 install -r requirements.txt`
 
 
 To run the Agent:
  
-  option (1) - run the bash shell script (Linux / MacOS):
+  - option (1) - run the bash shell script (Linux / MacOS):
     `bash ./run.sh`
 
-  option (2) - run manually (universal):
+  - option (2) - run manually (universal):
     `python3 ./main.py`
   
 
