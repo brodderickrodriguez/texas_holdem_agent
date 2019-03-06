@@ -2,3 +2,4 @@ numpy
 gym
 pytorch
 matplotlib
+treys
