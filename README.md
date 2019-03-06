@@ -1,8 +1,7 @@
 # TexasHoldem_ReinforcementLearning
 An implementation of DQN and Monte Carlo Tree Search to play the game of Texas Hold'em
 
-Version support:
-  Using python 3.6.4
+Version support: `python 3.6.4`
 
 to set up the environment:
 
