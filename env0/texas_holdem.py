@@ -20,8 +20,8 @@ class GameStage(Enum):
 
 class TexasHoldem:
     def __init__(self, players):
-        if len(players) < 2:
-            raise RuntimeError('number of players must be at least two')
+        # if len(players) < 2:
+        #     raise RuntimeError('number of players must be at least two')
 
         # initialize variables and assign their respective values in reset()
         self.deck, self.table_cards, self.players, self.game_stage = [], [], players, GameStage.INITIAL
