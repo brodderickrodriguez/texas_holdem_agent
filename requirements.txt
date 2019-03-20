@@ -1,5 +1,5 @@
 numpy
 gym
-pytorch
+torch
 matplotlib
 treys

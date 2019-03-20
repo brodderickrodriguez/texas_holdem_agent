@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-# Brodderick Rodriguez - CSSE
+# Brodderick Rodriguez
+# Auburn University - CSSE
 # 19 Mar. 2019
 
 import logging
@@ -7,6 +8,8 @@ import numpy as np
 
 from env0.player import Player
 from env0.texas_holdem import TexasHoldem
+
+import logging
 
 
 class Environment:
@@ -23,7 +26,16 @@ class Environment:
     def reset(self):
         pass
 
-    def step(self, action):
+
+    def step(self, player, action):
+
+        logging.info('received action from ' + str(player))
+
+        pass
+
+    def _step(self, action):
+
+
         pass
 
 
@@ -33,5 +45,9 @@ if __name__ == '__main__':
     plyrs = [Player() for _ in range(3)]
 
     env = Environment(plyrs)
+
+    env.step(plyrs[0], None)
+
+    env.game.step()
 
 
