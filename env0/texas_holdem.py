@@ -3,7 +3,7 @@
 # Auburn University - CSSE
 # 19 Mar. 2019
 
-from env0.player import Player
+from TexasHoldem_ReinforcementLearning.env0.player import Player
 from enum import Enum
 from treys import Evaluator, Deck, Card
 import logging
@@ -37,7 +37,7 @@ class TexasHoldem:
             player.cards = self.deck.draw(n=2)
             logging.info(str(player) + Card.print_pretty_cards(player.cards))
 
-    def step(self):
+    def step(self, actions):
         # check if hand is complete
         if self.game_stage == GameStage.HAND_COMPLETE:
             return self.game_stage
