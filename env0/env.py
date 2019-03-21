@@ -59,6 +59,7 @@ class Environment:
 
         # TODO: issue here!
         # need to wait until the game stages match before returning something
+        # is also doesnt work all the time :(
         # while len(self._game_observations) == 0:
         #     continue
 
