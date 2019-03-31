@@ -38,17 +38,4 @@ class Agent:
     def update(self, observation):
         print('got update', observation)
 
-    def begin(self):
-        if self.env is None:
-            raise RuntimeError('you must add this agent to an environment first')
-
-        observation = self.env.step(self, "test action")
-        print(self.agent_id, observation)
-
-        observation = self.env.step(self, "test action")
-        print(self.agent_id, observation)
-
-        return observation
-
-
 
