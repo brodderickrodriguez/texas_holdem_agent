@@ -38,11 +38,6 @@ class Agent:
     def update(self, observation):
         print('got update', observation)
 
-    # an agent calls this method to commit an action
-    def step(self):
-        observation = self.env.step(self, "test action")
-        pass
-
     def begin(self):
         if self.env is None:
             raise RuntimeError('you must add this agent to an environment first')
