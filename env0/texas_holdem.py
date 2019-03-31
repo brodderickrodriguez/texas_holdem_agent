@@ -3,7 +3,7 @@
 # Auburn University - CSSE
 # 19 Mar. 2019
 
-from TexasHoldem_ReinforcementLearning.env0.player import Player
+from TexasHoldem_ReinforcementLearning.env0.agent import Agent
 from enum import Enum
 from treys import Evaluator, Deck, Card
 import logging
@@ -19,12 +19,12 @@ class GameStage(Enum):
 
 
 class TexasHoldem:
-    def __init__(self, players):
-        # if len(players) < 2:
-        #     raise RuntimeError('number of players must be at least two')
+    def __init__(self, agents):
+        # if len(agents) < 2:
+        #     raise RuntimeError('number of agents must be at least two')
 
         # initialize variables and assign their respective values in reset()
-        self.deck, self.table_cards, self.players, self.game_stage = [], [], players, GameStage.INITIAL
+        self.deck, self.table_cards, self.agents, self.game_stage = [], [], agents, GameStage.INITIAL
         self.reset()
 
     def reset(self):
@@ -33,9 +33,9 @@ class TexasHoldem:
         self.game_stage = GameStage.INITIAL
 
         logging.info('dealing initial cards')
-        for player in self.players:
-            player.cards = self.deck.draw(n=2)
-            logging.info(str(player) + Card.print_pretty_cards(player.cards))
+        for agent in self.agents:
+            agent.cards = self.deck.draw(n=2)
+            logging.info(str(agent) + Card.print_pretty_cards(agent.cards))
 
     def step(self, actions):
         # check if hand is complete
@@ -56,8 +56,8 @@ class TexasHoldem:
         elif self.game_stage in [GameStage.TURN, GameStage.RIVER]:
             self.table_cards.append(self.deck.draw(n=1))
 
-        # if all cards for this hand have been delt, evaluate each players hands
-        # and return a list of winning players
+        # if all cards for this hand have been delt, evaluate each agents hands
+        # and return a list of winning agents
         elif self.game_stage == GameStage.SHOWDOWN:
             return self.evaluate_hands()
 
@@ -70,26 +70,26 @@ class TexasHoldem:
         logging.info(Card.print_pretty_cards(self.table_cards))
 
         # lastly, return the game stage
-        return self.game_stage
+        return self.game_stage, self.table_cards
 
     def evaluate_hands(self):
         evaluator = Evaluator()
 
-        # for each player, evaluate their hand and store its value
-        # in player.hand_score
-        for player in self.players:
-            player.hand_score = evaluator.evaluate(player.cards, self.table_cards)
-            print(player, player.hand_score)
+        # for each agent, evaluate their hand and store its value
+        # in agent.hand_score
+        for agent in self.agents:
+            agent.hand_score = evaluator.evaluate(agent.cards, self.table_cards)
+            print(agent, agent.hand_score)
 
-        # sorts players in descending over respective to their hand_score
-        # see Player.__lt__()
-        self.players.sort(reverse=True)
-        winners = [self.players[0]]
+        # sorts agents in descending over respective to their hand_score
+        # see Agent.__lt__()
+        self.agents.sort(reverse=True)
+        winners = [self.agents[0]]
         idx = 0
 
         # check if there are ties for first place
-        while idx + 1 < len(self.players) and self.players[idx].hand_score == self.players[idx + 1].hand_score:
-            winners.append(self.players[idx + 1])
+        while idx + 1 < len(self.agents) and self.agents[idx].hand_score == self.agents[idx + 1].hand_score:
+            winners.append(self.agents[idx + 1])
             idx += 1
 
         return winners
@@ -102,8 +102,8 @@ class Tests:
 
     @staticmethod
     def game_stage_test():
-        players = [Player() for _ in range(3)]
-        game = TexasHoldem(players)
+        agents = [Agent() for _ in range(3)]
+        game = TexasHoldem(agents)
 
         game.step()  # initial
         game.step()  # flop
