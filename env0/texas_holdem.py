@@ -3,7 +3,7 @@
 # Auburn University - CSSE
 # 19 Mar. 2019
 
-from TexasHoldem_ReinforcementLearning.env0.agent import Agent
+from agent import Agent
 from enum import Enum
 from treys import Evaluator, Deck, Card
 import logging
@@ -37,7 +37,7 @@ class TexasHoldem:
             agent.cards = self.deck.draw(n=2)
             logging.info(str(agent) + Card.print_pretty_cards(agent.cards))
 
-    def step(self, actions):
+    def step(self):
         # check if hand is complete
         if self.game_stage == GameStage.HAND_COMPLETE:
             return self.game_stage
@@ -110,6 +110,7 @@ class Tests:
         game.step()  # turn
         game.step()  # river
         game.step()  # showdown
+
         # game.step()  # game over
         # game.step()  # test -- this shouldn't cause a runtime error
 

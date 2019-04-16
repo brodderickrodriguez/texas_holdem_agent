@@ -37,5 +37,6 @@ class Agent:
     # called when the environment changes
     def update(self, observation):
         print('got update', observation)
+        print(observation)
 
 

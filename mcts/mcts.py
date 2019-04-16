@@ -1,5 +1,5 @@
 import numpy as np
-import config
+import mcts_config
 
 class Node:
 
@@ -36,11 +36,14 @@ class MCTS:
     def __len__(self):
         return len(self.tree)
 
-    def back_fill(self, value, breadcrumbs):
+    def back_prop(self, value, breadcrumbs):
         for edge in breadcrumbs:
             edge['N'] += 1
             edge['W'] += value
             edge['Q'] = edge['W'] / edge['N']
+
+    def add_node(self, Node):
+        pass
 
     def move_to_leaf(self):
         breadcrumbs = []
@@ -53,8 +56,8 @@ class MCTS:
             maxQU = -2**31
 
             if current == self.root:
-                epsilon = config.epsilon
-                nu      = np.random.dirichlet([config.alpha] * len(current.edges))
+                epsilon = mcts_config.epsilon
+                nu      = np.random.dirichlet([mcts_config.alpha] * len(current.edges))
             else:
                 epsilon = 0
                 nu = [0] * len(current.edges)

@@ -4,8 +4,8 @@
 # 19 Mar. 2019
 
 import logging
-from TexasHoldem_ReinforcementLearning.env0.agent import Agent
-from TexasHoldem_ReinforcementLearning.env0.texas_holdem import TexasHoldem
+from agent import Agent
+from texas_holdem import TexasHoldem
 
 
 class Environment:
@@ -29,9 +29,8 @@ class Environment:
 
         # if all players have committed actions, perform an env update and inform agents
         if len(self._agent_actions) == len(self._agents):
-            observation = self._game.step(self._agent_actions)
+            observation = self._game.step()
             [agent.update(observation) for agent in self._agents]
-            self._agent_actions = {}
 
         return
 
