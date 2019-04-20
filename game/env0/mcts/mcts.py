@@ -5,8 +5,7 @@ class Node:
 
     def __init__(self, state):
         self.state = state
-        self.turn  = state.turn
-        self.id    = state.id
+        self.id    = state.get_model_input
         self.edges = []
 
     def is_leaf(self):
@@ -73,7 +72,7 @@ class MCTS:
                     sim_action = action
                     sim_edge   = edge
 
-            _, value, done = current.state.move(sim_action)
+            _, value, done = current.state.take_action(sim_action)
             breadcrumbs.append(sim_edge)
 
         return current, value, done, breadcrumbs

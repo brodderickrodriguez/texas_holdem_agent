@@ -1,11 +1,12 @@
-from env0.agent import Agent
-from env0.texas_holdem import GameStage
+from game.env0.texas_holdem import GameStage
 from mcts import *
 from itertools import islice
 from treys import Evaluator, Deck, Card
 import mcts_config
 import numpy as np
 import random
+from game.env0.agent import Agent
+from state import State
 
 class MCTS_Agent(Agent):
 
@@ -13,7 +14,7 @@ class MCTS_Agent(Agent):
         self.mcts  = None
         self.sims  = mcts_config.sims
         self.cpuct = mcts_config.cpuct
-        self.state = {"rank": 0, "bet": 0, "playing": 1}
+        self.state = State(0, 0, 0, 0)
         self.model = None
         self.eval_ = Evaluator()
         self.train_overall_loss = []
@@ -34,9 +35,7 @@ class MCTS_Agent(Agent):
                         leaf.state["playing"] = 0
                     if action == 2:
                         leaf.bet += 1
-                    state = np.array(leaf.state["rank"] + [leaf.state["bet"]] + [leaf.state["playing"]])
-                else:
-                    state = np.array(leaf.state["rank"] + [leaf.state["bet"] + [leaf.state["playing"]]])
+                state = State(leaf.rank, leaf.bet, leaf.playing, leaf.hidden)
                 node = Node(state)
                 if state not in self.mcts.tree:
                     self.mcts.add_node(node)
@@ -48,7 +47,7 @@ class MCTS_Agent(Agent):
         for _ in range(mcts_config.loops):
             mb = random.sample(memory, min(mcts_config.batch_size, len(memory)))
 
-            training_states = np.array([self.model.convert(row['state']) for row in mb])
+            training_states = np.array([row['state'].get_model_input() for row in mb])
             training_targets = {'value_head' : np.array([row['value'] for row in mb]),
                                 'policy_head': np.array([row['AV'] for row in mb])}
             fit = self.model.fit(training_states, training_targets, epochs=mcts_config.epochs, verbose=1, validation_split=0, batch_size = 32)
@@ -59,8 +58,8 @@ class MCTS_Agent(Agent):
         self.model.print_weights()
     
     def get_preds(self, leaf):
-        model_input = np.array(self.state["rank"] + [self.state["bet"]] + [self.state["playing"]])
-        
+        model_input = self.state.get_model_input()
+
         preds = self.model.predict(model_input)
 
         value  = preds[0][0]
@@ -114,9 +113,9 @@ class MCTS_Agent(Agent):
             if observation[0] == GameStage.HAND_COMPLETE:
                 print("Whoa! MCTS not initialized")
                 return # This shouldn't happen, but if it does, don't
-            self.state["rank"]    = self.eval_.evaluate(self.cards, observation[1])
-            self.state["bet"]     = 0 
-            self.state["playing"] = 1
+            self.state.rank    = self.eval_.evaluate(self.cards, observation[1])
+            self.state.bet     = 0 
+            self.state.playing = 1
             self.mcts = MCTS(self.state, self.cpuct)
         else:
             self.change_root(self.state)
@@ -128,8 +127,12 @@ class MCTS_Agent(Agent):
 
         action, value = self.chooseAction(pi, values, tau)
     
+        if action == 0:
+            nextState = self.state.copy()
+            nextState.playing = 0
         if action == 2:
-            nextState = self.state['bet'] + 1
+            nextState = self.state.copy()
+            nextState.bet += 1
         
         NN_value = -self.get_preds(nextState)[0]
 
