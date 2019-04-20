@@ -89,6 +89,18 @@ class MCTS_Agent(Agent):
         pi = pi / (np.sum(pi) * 1.0)
         return pi, values
 
+    def chooseAction(self, pi, values, tau):
+        if tau == 0:
+            actions = np.argwhere(pi == max(pi))
+            action = random.choice(actions)[0]
+        else:
+            action_idx = np.random.multinomial(1, pi)
+            action = np.where(action_idx==1)[0][0] 
+
+        value = values[action]
+
+        return action, value
+
     def predict(self, input_to_model):
         return self.model.predict(input_to_model)
         
@@ -97,7 +109,7 @@ class MCTS_Agent(Agent):
         v, b       = self.eval(l, v, d, b)
         self.mcts.back_prop(v, b)
 
-    def update(self, observation):
+    def update(self, observation, tau):
         if self.mcts is None:
             if observation[0] == GameStage.HAND_COMPLETE:
                 print("Whoa! MCTS not initialized")
@@ -106,10 +118,23 @@ class MCTS_Agent(Agent):
             self.state["bet"]     = 0 
             self.state["playing"] = 1
             self.mcts = MCTS(self.state, self.cpuct)
+        else:
+            self.change_root(self.state)
         
         for sim in range(self.sims):
             sim()
+
+        pi, values = self.getAV(1)
+
+        action, value = self.chooseAction(pi, values, tau)
     
+        if action == 2:
+            nextState = self.state['bet'] + 1
+        
+        NN_value = -self.get_preds(nextState)[0]
+
+        return action, pi, value, NN_value
+
     def change_root(self, state):
         self.mcts.root = self.mcts.tree[state]
     

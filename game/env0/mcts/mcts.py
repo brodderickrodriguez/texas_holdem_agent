@@ -30,7 +30,7 @@ class MCTS:
 
     def __init__(self, root, cpuct):
         self.root  = root
-        self.tree  = {root.id: root}
+        self.tree  = {root: root}
         self.cpuct = cpuct
 
     def __len__(self):
