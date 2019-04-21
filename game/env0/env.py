@@ -77,6 +77,13 @@ class Tests:
     
     def play(self, agents):
         pi = 0
+        best = 0
+        for agent in agents:
+            best = max(agent.state.rank, best)
+        for agent in agents:
+            self.env.add_agent(agent)
+            agent.state.hidden = best
+            
         while self.env._game.game_stage != GameStage.HAND_COMPLETE:
             actions = self.env.step(agents)
             a, pi, mcts_val, nn_val = actions[0]
