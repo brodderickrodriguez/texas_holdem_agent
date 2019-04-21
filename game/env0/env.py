@@ -4,12 +4,19 @@
 # 19 Mar. 2019
 
 import logging
-from mcts.agent_mcts import Agent
-from mcts.model import Residual_CNN
-from mcts.mcts_config import reg, lr, hidden_layers, memory_size, episodes
-from mcts.memory import Memory
+from agent_mcts import MCTS_Agent
+from model import Residual_CNN
+from mcts_config import reg, lr, hidden_layers, memory_size, episodes
+from memory import Memory
+import random
+import pickle
 import numpy as np
 from texas_holdem import TexasHoldem, GameStage
+import time
+import sys
+
+toolbar_width = 30
+
 
 
 class Environment:
@@ -41,14 +48,14 @@ class Environment:
 
 class Tests:
     def __init__(self):
-        self.current_model = Residual_CNN(reg, lr, np.array([1, 3]).shape, 4, hidden_layers)
-        self.best_model    = Residual_CNN(reg, lr, np.array([1, 3]).shape, 4, hidden_layers)
-        self.current_agent = Agent()
-        self.best_agent = Agent()
+        self.current_model = Residual_CNN(reg, lr, (1,3,5), 3, hidden_layers)
+        self.best_model    = Residual_CNN(reg, lr, (1,3,5), 3, hidden_layers)
+        self.current_agent = MCTS_Agent()
+        self.best_agent = MCTS_Agent()
         self.env = Environment()
         self.scores = [0, 0, 0]
         try:
-            self.memory = pickle.load('/run/memory')
+            self.memory = pickle.load('/run/memory/memory.p')
         except:
             self.memory = Memory(memory_size)
         try:
@@ -59,35 +66,77 @@ class Tests:
             self.best_model.model.set_weights(self.current_model.model.get_weights())
         self.current_agent.model = self.current_model
         self.best_agent.model    = self.best_model
+        iter = 0
         while True:
-            self.memory = self.play_matches(self.best_agent, self.best_agent, self.best_agent, episodes, memory=self.memory)
+            self.memory, scores = self.play_matches(self.best_agent, self.current_agent, episodes, memory=self.memory)
+            self.memory.clear_stmemory()
+            print(scores)
+            print(len(self.memory.ltmemory))
+            if len(self.memory.ltmemory) >= memory_size:
+                self.current_agent.replay(self.memory.ltmemory)
 
+                if iter % 5 == 0:
+                    pickle.dump(self.memory, open('/run/memory/memory.p', "wb"))
 
-    def play_matches(self, player1, player2, player3, EPISODES, memory=None):
-        for e in range(EPISODES):
-            self.env.reset()
+                for s in random.sample(self.memory.ltmemory, min(1000, len(self.memory.ltmemory))):
+                    current_value, current_probs, _ = self.current_agent.get_preds(s['state'])
+                    best_value, best_probs, _ = self.best_agent.get_preds(s['state'])
             
-            pi = self.play([player1, player2, player3])
+            iter += 1
+                
 
+    def play_matches(self, player1, player2, EPISODES, memory=None):
+        # setup toolbar
+        sys.stdout.write("[%s]" % (" " * (toolbar_width)))
+        sys.stdout.flush()
+        sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
+        scores = []
+        for e in range(EPISODES):      
+            sys.stdout.write("-")
+            sys.stdout.flush()
+            pi, score = self.play([player1, player2])
+            scores.append(score)
             if memory != None:
-                memory.commit_stmemory([player1.state, player2.state, player3.state], [player1.state, player2.state, player3.state], pi)
-        return memory
+                memory.commit_stmemory([player1.state, player2.state], [player1.state.value, player2.state.value], pi)
+
+        sys.stdout.write("\n")
+        return memory, scores
 
 
     
     def play(self, agents):
-        pi = 0
-        best = 0
+        best = 0            
+        self.env.reset()
         for agent in agents:
             best = max(agent.state.rank, best)
         for agent in agents:
             self.env.add_agent(agent)
             agent.state.hidden = best
-            
-        while self.env._game.game_stage != GameStage.HAND_COMPLETE:
+            agent.mcts = None
+            agent.state.playing = 1
+        self.env.setup_game()
+        
+        while self.env._game.game_stage != GameStage.SHOWDOWN and agents[0].state.playing == 1 and agents[1].state.playing == 1:
+            for agent in agents:
+                agent.state.gs += 1
             actions = self.env.step(agents)
             a, pi, mcts_val, nn_val = actions[0]
-        return pi
+    
+
+        if agents[0].state.playing and not agents[1].state.playing:
+            score = 0
+        if not agents[0].state.playing and agents[1].state.playing:
+            score = 1
+        if not agents[0].state.playing and not agents[1].state.playing:
+            if agents[0].state.rank > agents[1].state.rank:
+                score = -1
+            if agents[0].state.rank < agents[1].state.rank:
+                score = 1
+            if agents[0].state.rank == agents[1].state.rank:
+                score = 0
+        
+        self.memory.commit_ltmemory()
+        return pi, score
 
 
 

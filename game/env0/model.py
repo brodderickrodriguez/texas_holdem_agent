@@ -38,7 +38,7 @@ class Gen_Model():
 		self.model = None
 
 	def predict(self, x):
-		return self.model.predict(x)
+		return self.model.predict(np.array([x]))
 
 	def fit(self, states, targets, epochs, verbose, validation_split, batch_size):
 		return self.model.fit(states, targets, epochs=epochs, verbose=verbose, validation_split = validation_split, batch_size = batch_size)
@@ -249,6 +249,5 @@ class Residual_CNN(Gen_Model):
 		return model
 
 	def convert(self, state):
-		inputToModel = np.array(state["rank"] + [state["bet"]] + [state["playing"]])
-		inputToModel = np.reshape(inputToModel, self.input_dim) 
+		inputToModel = np.reshape(state.get_bin(), self.input_dim) 
 		return (inputToModel)

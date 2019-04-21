@@ -8,7 +8,7 @@
             "name": "(gdb) Launch",
             "type": "cppdbg",
             "request": "launch",
-            "program": "enter program name, for example ${workspaceFolder}/a.exe",
+            "program": "game/env0/env.py",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",

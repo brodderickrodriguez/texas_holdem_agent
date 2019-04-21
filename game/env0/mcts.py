@@ -5,7 +5,7 @@ class Node:
 
     def __init__(self, state):
         self.state = state
-        self.id    = state.get_model_input
+        self.id    = state.id()
         self.edges = []
 
     def is_leaf(self):
@@ -15,7 +15,7 @@ class Node:
 class Edge:
 
     def __init__(self, a, b, pred, action):
-        self.id     = a.state.id + '>' + b.state.id
+        self.id     = a.state.id() + '>' + b.state.id()
         self.a      = a
         self.b      = b
         self.action = action
@@ -37,12 +37,12 @@ class MCTS:
 
     def back_prop(self, value, breadcrumbs):
         for edge in breadcrumbs:
-            edge['N'] += 1
-            edge['W'] += value
-            edge['Q'] = edge['W'] / edge['N']
+            edge.stats['N'] += 1
+            edge.stats['W'] += value
+            edge.stats['Q'] = edge.stats['W'] / edge.stats['N']
 
-    def add_node(self, Node):
-        pass
+    def add_node(self, node):
+        self.tree[node.id] = node
 
     def move_to_leaf(self):
         breadcrumbs = []
@@ -73,6 +73,7 @@ class MCTS:
                     sim_edge   = edge
 
             _, value, done = current.state.take_action(sim_action)
+            current = sim_edge.b
             breadcrumbs.append(sim_edge)
 
         return current, value, done, breadcrumbs

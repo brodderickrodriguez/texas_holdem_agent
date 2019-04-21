@@ -35,7 +35,6 @@ class TexasHoldem:
         logging.info('dealing initial cards')
         for agent in self.agents:
             agent.cards = self.deck.draw(n=2)
-            logging.info(str(agent) + Card.print_pretty_cards(agent.cards))
 
     def step(self):
         # check if hand is complete
@@ -59,12 +58,13 @@ class TexasHoldem:
         # if all cards for this hand have been delt, evaluate each agents hands
         # and return a list of winning agents
         elif self.game_stage == GameStage.SHOWDOWN:
-            return self.evaluate_hands()
+            self.evaluate_hands()
+            return self.game_stage, self.table_cards
 
         # if we accidentally call TexasHoldem.step() after the hand is over,
         # this will catch it
         elif self.game_stage == GameStage.HAND_COMPLETE:
-            return self.game_stage
+            return self.game_stage, self.table_cards
 
         # log some helpful output
         logging.info(Card.print_pretty_cards(self.table_cards))
@@ -79,7 +79,6 @@ class TexasHoldem:
         # in agent.hand_score
         for agent in self.agents:
             agent.hand_score = evaluator.evaluate(agent.cards, self.table_cards)
-            print(agent, agent.hand_score)
 
         # sorts agents in descending over respective to their hand_score
         # see Agent.__lt__()

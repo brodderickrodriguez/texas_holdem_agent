@@ -1,5 +1,6 @@
 import numpy as np
 from collections import deque
+import pickle
 
 import mcts_config as config
 
@@ -10,12 +11,11 @@ class Memory:
 		self.stmemory = deque(maxlen=config.memory_size)
 
 	def commit_stmemory(self, identities, state, actionValues):
-		for r in identities(state, actionValues):
-			self.stmemory.append({
-				'state': r[0], 
-				'AV': r[1], 
-				'playerTurn': r[0].playerTurn
-				})
+		for i, r in enumerate(identities):
+			self.stmemory.append({'state': r,
+								  'value': r.calc(),
+								  'AV'   : actionValues[i]})
+						
 
 	def commit_ltmemory(self):
 		for i in self.stmemory:
