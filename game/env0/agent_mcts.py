@@ -7,6 +7,9 @@ import numpy as np
 import random
 from agent import Agent
 from state import State
+from IPython import display
+import pylab as pl
+import matplotlib.pyplot as plt
 
 class MCTS_Agent(Agent):
 
@@ -31,12 +34,7 @@ class MCTS_Agent(Agent):
             probs = probs[:3]
             
             for idx, action in enumerate([0, 1, 2]):
-                if action == 0 or action == 2:
-                    if action == 0:
-                        leaf.state.playing = 0
-                    if action == 2:
-                        leaf.state.bet += 1
-                state = State(leaf.state.rank, leaf.state.bet, leaf.state.playing, leaf.state.hidden)
+                state = leaf.state.take_action(action)[0]
                 node = Node(state)
                 if state not in self.mcts.tree:
                     self.mcts.add_node(node)
@@ -57,6 +55,16 @@ class MCTS_Agent(Agent):
             self.train_overall_loss.append(round(fit.history['loss'][epochs - 1],4))
             self.train_value_loss.append(round(fit.history['value_head_loss'][epochs - 1],4)) 
             self.train_policy_loss.append(round(fit.history['policy_head_loss'][epochs - 1],4)) 
+        
+            
+            plt.plot(self.train_overall_loss, 'k')
+            plt.plot(self.train_value_loss, 'k:')
+            plt.plot(self.train_policy_loss, 'k--')
+
+            plt.legend(['train_overall_loss', 'train_value_loss', 'train_policy_loss'], loc='lower left')
+
+            display.clear_output(wait=True)
+            display.display(pl.gcf())
         self.model.print_weights()
     
     def get_preds(self, leaf):
@@ -70,7 +78,7 @@ class MCTS_Agent(Agent):
         actions = [0, 1, 2] # Fold, Check, Bet
 
         mask = np.ones(logits.shape, dtype=bool)
-        mask[0] = False
+        mask[actions] = False
         logits[mask] = -100
 
         odds = np.exp(logits)
@@ -85,8 +93,7 @@ class MCTS_Agent(Agent):
         for action, edge in edges:
             pi[action] = pow(edge.stats['N'], 1/tau)
             values[action] = edge.stats['Q']
-
-        pi = pi / (np.sum(pi) * 1.0)
+        pi = pi / np.sum(pi)
         return pi, values
 
     def chooseAction(self, pi, values, tau):
@@ -122,6 +129,8 @@ class MCTS_Agent(Agent):
         else:
             self.change_root(Node(self.state))
         
+        self.state.rank = self.eval_.evaluate(self.cards, observation[1])
+
         for _ in range(self.sims):
             self.sim()
 
@@ -134,11 +143,12 @@ class MCTS_Agent(Agent):
             nextState.playing = 0
         if action == 2:
             nextState.bet += 1
+        nextState.gs += 1
         
         NN_value = -self.get_preds(nextState)[0]
 
         return action, pi, value, NN_value
 
     def change_root(self, state):
+        self.mcts.add_node(state)
         self.mcts.root = self.mcts.tree[state.id]
-    

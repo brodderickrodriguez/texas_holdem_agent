@@ -6,13 +6,15 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
+from keras.utils import plot_model
 from keras.models import Sequential, load_model, Model
 from keras.layers import Input, Dense, Conv2D, Flatten, BatchNormalization, Activation, LeakyReLU, add
 from keras.optimizers import SGD
 from keras import regularizers
-
+import pylab as pl
 import keras.backend as K
-
+from IPython import display
+%matplotlib inline
 import tensorflow as tf
 
 def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -44,12 +46,12 @@ class Gen_Model():
 		return self.model.fit(states, targets, epochs=epochs, verbose=verbose, validation_split = validation_split, batch_size = batch_size)
 
 	def write(self):
-		self.model.save('/models/model.h5')
+		self.model.save('model.h5')
 
-	def read(self, game, run_number, version):
-		return load_model('/run/models/model.h5', custom_objects={'softmax_cross_entropy_with_logits': softmax_cross_entropy_with_logits})
+	def read(self):
+		return load_model('model.h5', custom_objects={'softmax_cross_entropy_with_logits': softmax_cross_entropy_with_logits})
 
-	def printWeightAverages(self):
+	def print_weights(self):
 		layers = self.model.layers
 		for i, l in enumerate(layers):
 			try:
@@ -99,7 +101,7 @@ class Gen_Model():
 							clim = (0, 2)
 						sub.imshow([x[i]], cmap='coolwarm', clim=clim,aspect="auto")
 						
-					plt.show()
+					display.display(pl.gcf())
 
 				except:
 					try:
@@ -107,12 +109,12 @@ class Gen_Model():
 						sub = fig.add_subplot(1, 1, 1)
 						sub.imshow(x[0], cmap='coolwarm', clim=(-1, 1),aspect="auto")
 						
-						plt.show()
+						display.display(pl.gcf())
 
 					except:
 						pass
 
-			plt.show()
+			display.display(pl.gcf())
 
 
 class Residual_CNN(Gen_Model):
@@ -246,6 +248,7 @@ class Residual_CNN(Gen_Model):
 			loss_weights={'value_head': 0.5, 'policy_head': 0.5}	
 			)
 
+		# plot_model(model, to_file='./model/' + 'model.png', show_shapes = True)
 		return model
 
 	def convert(self, state):

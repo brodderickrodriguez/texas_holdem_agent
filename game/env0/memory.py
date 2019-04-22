@@ -14,7 +14,7 @@ class Memory:
 		for i, r in enumerate(identities):
 			self.stmemory.append({'state': r,
 								  'value': r.calc(),
-								  'AV'   : actionValues[i]})
+								  'AV'   : actionValues})
 						
 
 	def commit_ltmemory(self):

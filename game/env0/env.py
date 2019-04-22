@@ -6,7 +6,7 @@
 import logging
 from agent_mcts import MCTS_Agent
 from model import Residual_CNN
-from mcts_config import reg, lr, hidden_layers, memory_size, episodes
+from mcts_config import reg, lr, hidden_layers, memory_size, episodes, scoring_threshold
 from memory import Memory
 import random
 import pickle
@@ -15,7 +15,7 @@ from texas_holdem import TexasHoldem, GameStage
 import time
 import sys
 
-toolbar_width = 30
+toolbar_width = episodes
 
 
 
@@ -47,7 +47,8 @@ class Environment:
 
 
 class Tests:
-    def __init__(self):
+    def __init__(self, mode):
+        self.mode = mode
         self.current_model = Residual_CNN(reg, lr, (1,3,5), 3, hidden_layers)
         self.best_model    = Residual_CNN(reg, lr, (1,3,5), 3, hidden_layers)
         self.current_agent = MCTS_Agent()
@@ -55,13 +56,17 @@ class Tests:
         self.env = Environment()
         self.scores = [0, 0, 0]
         try:
-            self.memory = pickle.load('/run/memory/memory.p')
+            self.memory = pickle.load('memory.p')
+            print('loaded memory!')
         except:
+            print('memory load unsuccessful!')
             self.memory = Memory(memory_size)
         try:
-            bm_temp = best_model.read()
+            bm_temp = self.best_model.read()
             self.current_model.model.set_weights(bm_temp.get_weights())
             self.best_model.model.set_weights(bm_temp.get_weights())
+            self.best_model.viewLayers()
+            print('loaded model!')
         except:
             self.best_model.model.set_weights(self.current_model.model.get_weights())
         self.current_agent.model = self.current_model
@@ -76,24 +81,25 @@ class Tests:
                 self.current_agent.replay(self.memory.ltmemory)
 
                 if iter % 5 == 0:
-                    pickle.dump(self.memory, open('/run/memory/memory.p', "wb"))
+                    pickle.dump(self.memory, open('memory.p', "wb"))
 
                 for s in random.sample(self.memory.ltmemory, min(1000, len(self.memory.ltmemory))):
-                    current_value, current_probs, _ = self.current_agent.get_preds(s['state'])
-                    best_value, best_probs, _ = self.best_agent.get_preds(s['state'])
+                    current_value, current_probs = self.current_agent.get_preds(s['state'])
+                    best_value, best_probs = self.best_agent.get_preds(s['state'])
             
+                if np.sum(scores) > scoring_threshold:
+                    self.best_model.model.set_weights(self.current_model.model.get_weights())
+                    self.best_model.write()
             iter += 1
                 
 
     def play_matches(self, player1, player2, EPISODES, memory=None):
         # setup toolbar
-        sys.stdout.write("[%s]" % (" " * (toolbar_width)))
         sys.stdout.flush()
-        sys.stdout.write("\b" * (toolbar_width+1)) # return to start of line, after '['
         scores = []
         for e in range(EPISODES):      
-            sys.stdout.write("-")
             sys.stdout.flush()
+            sys.stdout.write('-')
             pi, score = self.play([player1, player2])
             scores.append(score)
             if memory != None:
@@ -118,13 +124,27 @@ class Tests:
         
         while self.env._game.game_stage != GameStage.SHOWDOWN and agents[0].state.playing == 1 and agents[1].state.playing == 1:
             for agent in agents:
-                agent.state.gs += 1
+                best = max(agent.state.rank, best)
+            for agent in agents:
+                agent.state.hidden = best
+                agent.state.calc()
             actions = self.env.step(agents)
+            for it, action in enumerate(actions):
+                if action[0] == 0:
+                    output = "Agent " + str(it + 1) + " folded."
+                if action[0] == 1:
+                    output = "Agent " + str(it + 1) + " checks."
+                if action[0] == 2:
+                    output = "Agent " + str(it + 1) + " bets."
             a, pi, mcts_val, nn_val = actions[0]
+        
+        if self.env._game.game_stage == GameStage.SHOWDOWN:
+            for agent in agents:
+                agent.state.playing = 0
     
-
+        score = 0
         if agents[0].state.playing and not agents[1].state.playing:
-            score = 0
+            score = -1
         if not agents[0].state.playing and agents[1].state.playing:
             score = 1
         if not agents[0].state.playing and not agents[1].state.playing:
@@ -134,7 +154,6 @@ class Tests:
                 score = 1
             if agents[0].state.rank == agents[1].state.rank:
                 score = 0
-        
         self.memory.commit_ltmemory()
         return pi, score
 

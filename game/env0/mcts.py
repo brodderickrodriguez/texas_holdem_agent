@@ -1,9 +1,12 @@
 import numpy as np
 import mcts_config
+from state import State
 
 class Node:
 
     def __init__(self, state):
+        if not isinstance(state, State):
+            Exception()
         self.state = state
         self.id    = state.id()
         self.edges = []
@@ -63,7 +66,6 @@ class MCTS:
             
             Nb = 0
             for i, (action, edge) in enumerate(current.edges):
-
                 U = self.cpuct * ((1 - epsilon) * edge['P'] + epsilon * nu[i]) * Nb//2 / (1 + edge['N'])
                 Q = edge['Q']
 

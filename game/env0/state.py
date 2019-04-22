@@ -21,17 +21,22 @@ class State:
 
     def take_action(self, action):
         newState = self.copy()
-        newState.gs += 1
+        if newState.playing == 1:
+            newState.gs += 1
         if action == 2:
             newState.bet += 1
         if action == 0:
             newState.playing = 0
+            newState.value = -1
         if newState.gs >= 4:
             newState.playing = 0
+            newState.calc()
         return newState, newState.value, (newState.playing + 1) % 2
 
     def calc(self):
         # Value function
+        if self.gs < 4 and self.playing == 0:
+            return -1
         self.value = (-1 if self.rank == self.hidden else 1)
         self.value += (self.value * self.bet)
         return self.value
