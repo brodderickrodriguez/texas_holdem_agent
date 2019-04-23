@@ -35,6 +35,8 @@ class NFSPAgent:
         self.model = nn.Sequential(
             nn.Linear(n_inputs, 256),
             nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
             nn.Linear(256, n_outputs)
         ).to(device)
         # Target network
@@ -42,6 +44,8 @@ class NFSPAgent:
         # Average action policy network
         self.avgModel = nn.Sequential(
             nn.Linear(n_inputs, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
             nn.ReLU(),
             nn.Linear(256, n_outputs)
         ).to(device)
@@ -187,8 +191,10 @@ if __name__ == '__main__':
     env = gym.make('CartPole-v0')
     n_inputs = 4
     n_outputs = 2
-    agent = NFSPAgent(n_inputs, n_outputs, save_progress=True)
+    agent = NFSPAgent(n_inputs, n_outputs)#, save_progress=True)
     score_history = deque(maxlen=30)
+    
+    print("start training cartpole")
 
     for e in range(1, EPISODES+1):
         state = env.reset()
@@ -205,11 +211,6 @@ if __name__ == '__main__':
 
             agent.memorizeRL(state, action, reward, next_state)
             agent.learn()
-
-            # print(state)
-            # print(action)
-            # print(reward)
-            # print(next_state)
 
             state = next_state
             steps += 1
