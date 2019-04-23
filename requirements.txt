@@ -3,3 +3,8 @@ gym
 torch
 matplotlib
 treys
+keras
+tensorflow
+pickle
+IPython
+pylab

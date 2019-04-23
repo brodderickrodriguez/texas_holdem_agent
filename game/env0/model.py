@@ -14,7 +14,6 @@ from keras import regularizers
 import pylab as pl
 import keras.backend as K
 from IPython import display
-%matplotlib inline
 import tensorflow as tf
 
 def softmax_cross_entropy_with_logits(y_true, y_pred):
@@ -101,7 +100,7 @@ class Gen_Model():
 							clim = (0, 2)
 						sub.imshow([x[i]], cmap='coolwarm', clim=clim,aspect="auto")
 						
-					display.display(pl.gcf())
+					plt.show()
 
 				except:
 					try:
@@ -109,12 +108,12 @@ class Gen_Model():
 						sub = fig.add_subplot(1, 1, 1)
 						sub.imshow(x[0], cmap='coolwarm', clim=(-1, 1),aspect="auto")
 						
-						display.display(pl.gcf())
+						plt.show()
 
 					except:
 						pass
 
-			display.display(pl.gcf())
+			plt.show()
 
 
 class Residual_CNN(Gen_Model):
@@ -248,7 +247,7 @@ class Residual_CNN(Gen_Model):
 			loss_weights={'value_head': 0.5, 'policy_head': 0.5}	
 			)
 
-		# plot_model(model, to_file='./model/' + 'model.png', show_shapes = True)
+		plot_model(model, to_file='model.png', show_shapes = True)
 		return model
 
 	def convert(self, state):
